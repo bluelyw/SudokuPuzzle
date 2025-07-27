@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>趣味数独游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 趣味数独游戏 🎮</h1>
+            <p class="subtitle">小朋友们，来挑战数独吧！</p>
+        </header>
+
+        <div class="game-info">
+            <div class="timer">
+                <span>⏰ 时间：</span>
+                <span id="time">00:00</span>
+            </div>
+            <div class="difficulty">
+                <span>🎯 难度：</span>
+                <select id="difficulty-select">
+                    <option value="easy">简单</option>
+                    <option value="medium">中等</option>
+                    <option value="hard">困难</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div id="sudoku-grid"></div>
+        </div>
+
+        <div class="controls">
+            <div class="number-pad">
+                <button class="number-btn" data-number="1">1</button>
+                <button class="number-btn" data-number="2">2</button>
+                <button class="number-btn" data-number="3">3</button>
+                <button class="number-btn" data-number="4">4</button>
+                <button class="number-btn" data-number="5">5</button>
+                <button class="number-btn" data-number="6">6</button>
+                <button class="number-btn" data-number="7">7</button>
+                <button class="number-btn" data-number="8">8</button>
+                <button class="number-btn" data-number="9">9</button>
+                <button class="number-btn clear-btn" data-number="0">🗑️ 清除</button>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="new-game-btn" class="action-btn">🆕 新游戏</button>
+                <button id="check-btn" class="action-btn">✅ 检查</button>
+                <button id="hint-btn" class="action-btn">💡 提示</button>
+                <button id="solve-btn" class="action-btn">🔍 解答</button>
+            </div>
+        </div>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
