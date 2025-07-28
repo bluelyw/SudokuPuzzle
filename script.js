@@ -1,6 +1,9 @@
 class SudokuGame {
     constructor() {
-        this.gridSize = 9; // 默认9宫格
+        // 从HTML中读取初始宫格大小
+        const gridSizeSelect = document.getElementById('grid-size-select');
+        this.gridSize = gridSizeSelect ? parseInt(gridSizeSelect.value) : 9;
+        
         this.board = [];
         this.solution = [];
         this.originalBoard = [];
@@ -94,15 +97,22 @@ class SudokuGame {
     }
 
     generateSolution() {
-        // 根据宫格大小生成不同的数独模板
-        const templates = this.getTemplates();
-        const template = templates[Math.floor(Math.random() * templates.length)];
-        this.solution = template.map(row => [...row]);
+        // 随机选择生成方式：模板生成或随机生成
+        const useRandomGeneration = Math.random() < 0.3; // 30%概率使用随机生成
         
-        // 随机变换（交换数字）
-        this.randomizeSolution();
+        if (useRandomGeneration && this.gridSize <= 9) {
+            // 使用真正的随机生成算法
+            this.solution = this.generateRandomSudoku();
+        } else {
+            // 使用模板生成
+            const templates = this.getTemplates();
+            const template = templates[Math.floor(Math.random() * templates.length)];
+            this.solution = template.map(row => [...row]);
+            this.randomizeSolution();
+        }
     }
 
+    // 改进1：增加更多模板
     getTemplates() {
         switch (this.gridSize) {
             case 4:
@@ -112,6 +122,18 @@ class SudokuGame {
                         [3,4,1,2],
                         [2,1,4,3],
                         [4,3,2,1]
+                    ],
+                    [
+                        [2,1,4,3],
+                        [4,3,2,1],
+                        [1,2,3,4],
+                        [3,4,1,2]
+                    ],
+                    [
+                        [3,4,1,2],
+                        [1,2,3,4],
+                        [4,3,2,1],
+                        [2,1,4,3]
                     ]
                 ];
             case 6:
@@ -123,6 +145,22 @@ class SudokuGame {
                         [5,6,4,2,3,1],
                         [3,1,2,6,4,5],
                         [6,4,5,3,1,2]
+                    ],
+                    [
+                        [2,3,1,5,6,4],
+                        [5,6,4,2,3,1],
+                        [3,1,2,6,4,5],
+                        [6,4,5,3,1,2],
+                        [1,2,3,4,5,6],
+                        [4,5,6,1,2,3]
+                    ],
+                    [
+                        [3,1,2,6,4,5],
+                        [6,4,5,3,1,2],
+                        [1,2,3,4,5,6],
+                        [4,5,6,1,2,3],
+                        [2,3,1,5,6,4],
+                        [5,6,4,2,3,1]
                     ]
                 ];
             case 9:
@@ -137,6 +175,39 @@ class SudokuGame {
                         [9,6,1,5,3,7,2,8,4],
                         [2,8,7,4,1,9,6,3,5],
                         [3,4,5,2,8,6,1,7,9]
+                    ],
+                    [
+                        [1,2,3,4,5,6,7,8,9],
+                        [4,5,6,7,8,9,1,2,3],
+                        [7,8,9,1,2,3,4,5,6],
+                        [2,3,1,5,6,4,8,9,7],
+                        [5,6,4,8,9,7,2,3,1],
+                        [8,9,7,2,3,1,5,6,4],
+                        [3,1,2,6,4,5,9,7,8],
+                        [6,4,5,9,7,8,3,1,2],
+                        [9,7,8,3,1,2,6,4,5]
+                    ],
+                    [
+                        [8,1,2,7,5,3,6,4,9],
+                        [9,4,3,6,8,2,1,7,5],
+                        [6,7,5,4,9,1,2,8,3],
+                        [1,5,4,2,3,7,8,9,6],
+                        [3,6,9,8,4,5,7,2,1],
+                        [2,8,7,1,6,9,5,3,4],
+                        [5,2,1,9,7,4,3,6,8],
+                        [4,3,8,5,2,6,9,1,7],
+                        [7,9,6,3,1,8,4,5,2]
+                    ],
+                    [
+                        [2,7,6,3,1,4,9,5,8],
+                        [8,5,4,9,6,2,7,1,3],
+                        [9,1,3,8,7,5,2,6,4],
+                        [4,6,8,1,2,7,3,9,5],
+                        [5,9,7,4,3,8,6,2,1],
+                        [1,3,2,6,5,9,8,4,7],
+                        [3,2,5,7,4,1,6,8,9],
+                        [6,8,9,2,9,3,1,7,4],
+                        [7,4,1,5,8,6,4,3,2]
                     ]
                 ];
             case 16:
@@ -158,10 +229,91 @@ class SudokuGame {
                         [8,7,6,5,12,11,10,9,16,15,14,13,4,3,2,1],
                         [12,11,10,9,16,15,14,13,4,3,2,1,8,7,6,5],
                         [16,15,14,13,4,3,2,1,8,7,6,5,12,11,10,9]
+                    ],
+                    [
+                        [2,1,4,3,6,5,8,7,10,9,12,11,14,13,16,15],
+                        [6,5,8,7,10,9,12,11,14,13,16,15,2,1,4,3],
+                        [10,9,12,11,14,13,16,15,2,1,4,3,6,5,8,7],
+                        [14,13,16,15,2,1,4,3,6,5,8,7,10,9,12,11],
+                        [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+                        [5,6,7,8,9,10,11,12,13,14,15,16,1,2,3,4],
+                        [9,10,11,12,13,14,15,16,1,2,3,4,5,6,7,8],
+                        [13,14,15,16,1,2,3,4,5,6,7,8,9,10,11,12],
+                        [3,4,1,2,7,8,5,6,11,12,9,10,15,16,13,14],
+                        [7,8,5,6,11,12,9,10,15,16,13,14,3,4,1,2],
+                        [11,12,9,10,15,16,13,14,3,4,1,2,7,8,5,6],
+                        [15,16,13,14,3,4,1,2,7,8,5,6,11,12,9,10],
+                        [4,3,2,1,8,7,6,5,12,11,10,9,16,15,14,13],
+                        [8,7,6,5,12,11,10,9,16,15,14,13,4,3,2,1],
+                        [12,11,10,9,16,15,14,13,4,3,2,1,8,7,6,5],
+                        [16,15,14,13,4,3,2,1,8,7,6,5,12,11,10,9]
                     ]
                 ];
             default:
                 return [];
+        }
+    }
+
+    // 改进2：实现真正的随机生成算法
+    generateRandomSudoku() {
+        const board = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(0));
+        
+        // 填充对角线上的宫格
+        const boxSize = Math.sqrt(this.gridSize);
+        for (let i = 0; i < this.gridSize; i += boxSize + 1) {
+            this.fillBox(board, i, i);
+        }
+        
+        // 使用回溯算法解决剩余的单元格
+        if (this.solveSudoku(board)) {
+            return board;
+        } else {
+            // 如果失败，重新生成
+            return this.generateRandomSudoku();
+        }
+    }
+
+    fillBox(board, row, col) {
+        const boxSize = Math.sqrt(this.gridSize);
+        const numbers = Array.from({length: this.gridSize}, (_, i) => i + 1);
+        
+        for (let i = 0; i < boxSize; i++) {
+            for (let j = 0; j < boxSize; j++) {
+                const randomIndex = Math.floor(Math.random() * numbers.length);
+                board[row + i][col + j] = numbers[randomIndex];
+                numbers.splice(randomIndex, 1);
+            }
+        }
+    }
+
+    solveSudoku(board) {
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
+                if (board[row][col] === 0) {
+                    // 随机打乱数字顺序，增加随机性
+                    const numbers = Array.from({length: this.gridSize}, (_, i) => i + 1);
+                    this.shuffleArray(numbers);
+                    
+                    for (let num of numbers) {
+                        if (this.isValid(board, row, col, num)) {
+                            board[row][col] = num;
+                            if (this.solveSudoku(board)) {
+                                return true;
+                            }
+                            board[row][col] = 0;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
         }
     }
 
@@ -251,6 +403,58 @@ class SudokuGame {
         }
     }
 
+    // 改进3：增加数独规则验证
+    validateSudokuRules(board) {
+        // 检查行
+        for (let row = 0; row < this.gridSize; row++) {
+            const rowNumbers = new Set();
+            for (let col = 0; col < this.gridSize; col++) {
+                const num = board[row][col];
+                if (num !== 0) {
+                    if (rowNumbers.has(num)) {
+                        return { valid: false, type: 'row', position: row };
+                    }
+                    rowNumbers.add(num);
+                }
+            }
+        }
+        
+        // 检查列
+        for (let col = 0; col < this.gridSize; col++) {
+            const colNumbers = new Set();
+            for (let row = 0; row < this.gridSize; row++) {
+                const num = board[row][col];
+                if (num !== 0) {
+                    if (colNumbers.has(num)) {
+                        return { valid: false, type: 'column', position: col };
+                    }
+                    colNumbers.add(num);
+                }
+            }
+        }
+        
+        // 检查宫格
+        const boxSize = Math.sqrt(this.gridSize);
+        for (let boxRow = 0; boxRow < this.gridSize; boxRow += boxSize) {
+            for (let boxCol = 0; boxCol < this.gridSize; boxCol += boxSize) {
+                const boxNumbers = new Set();
+                for (let i = 0; i < boxSize; i++) {
+                    for (let j = 0; j < boxSize; j++) {
+                        const num = board[boxRow + i][boxCol + j];
+                        if (num !== 0) {
+                            if (boxNumbers.has(num)) {
+                                return { valid: false, type: 'box', position: { row: boxRow, col: boxCol } };
+                            }
+                            boxNumbers.add(num);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return { valid: true };
+    }
+
     isValid(board, row, col, num) {
         // 检查行
         for (let x = 0; x < this.gridSize; x++) {
@@ -299,6 +503,13 @@ class SudokuGame {
             this.board[row][col] = number;
             this.selectedCell.textContent = number;
             this.selectedCell.classList.remove('error', 'correct');
+            
+            // 实时验证数独规则
+            const validation = this.validateSudokuRules(this.board);
+            if (!validation.valid) {
+                this.selectedCell.classList.add('error');
+                this.showMessage(`数独规则冲突：${validation.type === 'row' ? '行' : validation.type === 'column' ? '列' : '宫格'}中有重复数字！`, 'error');
+            }
         }
     }
 
@@ -313,14 +524,47 @@ class SudokuGame {
             }
         }
 
-        // 检查解答是否正确
+        // 改进3：使用数独规则验证
+        const validation = this.validateSudokuRules(this.board);
+        if (!validation.valid) {
+            let errorMsg = '数独规则冲突：';
+            if (validation.type === 'row') {
+                errorMsg += `第${validation.position + 1}行有重复数字！`;
+            } else if (validation.type === 'column') {
+                errorMsg += `第${validation.position + 1}列有重复数字！`;
+            } else {
+                errorMsg += `宫格中有重复数字！`;
+            }
+            this.showMessage(errorMsg, 'error');
+            return;
+        }
+
+        // 检查解答是否正确（与标准答案比较）
+        let differences = [];
         for (let row = 0; row < this.gridSize; row++) {
             for (let col = 0; col < this.gridSize; col++) {
                 if (this.board[row][col] !== this.solution[row][col]) {
-                    this.showMessage('解答不正确，请继续尝试！', 'error');
-                    return;
+                    differences.push({
+                        row: row + 1,
+                        col: col + 1,
+                        userAnswer: this.board[row][col],
+                        correctAnswer: this.solution[row][col]
+                    });
                 }
             }
+        }
+        
+        if (differences.length > 0) {
+            // 显示具体的错误信息
+            let errorMsg = '解答不正确！错误位置：';
+            differences.slice(0, 3).forEach(diff => {
+                errorMsg += `第${diff.row}行第${diff.col}列应该是${diff.correctAnswer}而不是${diff.userAnswer}；`;
+            });
+            if (differences.length > 3) {
+                errorMsg += `还有${differences.length - 3}个错误...`;
+            }
+            this.showMessage(errorMsg, 'error');
+            return;
         }
 
         this.showMessage(`🎉 恭喜！${this.gridSize}宫格数独完成！`, 'success');
@@ -472,4 +716,4 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
         console.error('游戏初始化失败:', error);
     }
-}); 
+});

@@ -164,13 +164,41 @@ h1 {
     animation: bounce 0.5s;
 }
 
-/* 3x3宫格边框 */
-.cell:nth-child(3n) {
+/* 动态宫格边框样式 */
+.grid-4 .cell:nth-child(2n) {
     margin-right: 4px;
 }
 
-.cell:nth-child(n+19):nth-child(-n+27),
-.cell:nth-child(n+46):nth-child(-n+54) {
+.grid-4 .cell:nth-child(n+5):nth-child(-n+8),
+.grid-4 .cell:nth-child(n+13):nth-child(-n+16) {
+    margin-bottom: 4px;
+}
+
+.grid-6 .cell:nth-child(3n) {
+    margin-right: 4px;
+}
+
+.grid-6 .cell:nth-child(n+7):nth-child(-n+12),
+.grid-6 .cell:nth-child(n+19):nth-child(-n+24) {
+    margin-bottom: 4px;
+}
+
+.grid-9 .cell:nth-child(3n) {
+    margin-right: 4px;
+}
+
+.grid-9 .cell:nth-child(n+19):nth-child(-n+27),
+.grid-9 .cell:nth-child(n+46):nth-child(-n+54) {
+    margin-bottom: 4px;
+}
+
+.grid-16 .cell:nth-child(4n) {
+    margin-right: 4px;
+}
+
+.grid-16 .cell:nth-child(n+17):nth-child(-n+32),
+.grid-16 .cell:nth-child(n+49):nth-child(-n+64),
+.grid-16 .cell:nth-child(n+81):nth-child(-n+96) {
     margin-bottom: 4px;
 }
 
