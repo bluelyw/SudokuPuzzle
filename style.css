@@ -108,6 +108,58 @@ h1 {
     cursor: pointer;
     transition: all 0.3s ease;
     border-radius: 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 笔记容器样式 */
+.notes-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    gap: 1px;
+    padding: 2px;
+    pointer-events: none;
+}
+
+.note-number {
+    font-size: 0.8em;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: normal;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* 9宫格笔记布局 */
+.grid-9 .notes-container {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+
+/* 6宫格笔记布局 */
+.grid-6 .notes-container {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+}
+
+/* 4宫格笔记布局 */
+.grid-4 .notes-container {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+}
+
+/* 16宫格笔记布局 */
+.grid-16 .notes-container {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
 }
 
 /* 不同宫格大小的单元格尺寸 */
@@ -260,6 +312,23 @@ h1 {
 
 .clear-btn {
     background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+}
+
+.note-mode-btn {
+    background: linear-gradient(45deg, #4ecdc4, #44a08d);
+    color: white;
+    font-size: 0.9em;
+}
+
+.note-mode-btn.active {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
 .action-buttons {

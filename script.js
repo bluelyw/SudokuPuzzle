@@ -13,6 +13,10 @@ class SudokuGame {
         this.hintsUsed = 0;
         this.maxHints = 3;
         
+        // 笔记功能相关
+        this.notes = {}; // 存储每个单元格的笔记 { "row-col": [1,2,3] }
+        this.isNoteMode = false; // 是否处于笔记模式
+        
         this.initializeGame();
         this.setupEventListeners();
         this.startTimer();
@@ -36,6 +40,21 @@ class SudokuGame {
                 cell.dataset.row = row;
                 cell.dataset.col = col;
                 cell.addEventListener('click', () => this.selectCell(row, col));
+                
+                // 创建笔记容器 - 简化版本
+                const notesContainer = document.createElement('div');
+                notesContainer.className = 'notes-container';
+                notesContainer.innerHTML = ''; // 确保初始为空
+                cell.appendChild(notesContainer);
+                
+                // 立即验证笔记容器
+                const addedContainer = cell.querySelector('.notes-container');
+                if (addedContainer) {
+                    console.log(`✅ 成功创建单元格: 第${row+1}行第${col+1}列，笔记容器已添加`);
+                } else {
+                    console.error(`❌ 失败创建单元格: 第${row+1}行第${col+1}列，笔记容器未添加`);
+                }
+                
                 grid.appendChild(cell);
             }
         }
@@ -45,6 +64,14 @@ class SudokuGame {
         const numberPad = document.getElementById('number-pad');
         numberPad.innerHTML = '';
         numberPad.className = `number-pad size-${this.gridSize}`;
+
+        // 添加笔记模式切换按钮
+        const noteModeBtn = document.createElement('button');
+        noteModeBtn.className = 'number-btn note-mode-btn';
+        noteModeBtn.id = 'note-mode-btn';
+        noteModeBtn.textContent = '📝 笔记';
+        noteModeBtn.addEventListener('click', () => this.toggleNoteMode());
+        numberPad.appendChild(noteModeBtn);
 
         // 根据宫格大小生成数字按钮
         for (let i = 1; i <= this.gridSize; i++) {
@@ -90,10 +117,19 @@ class SudokuGame {
     generateNewGame() {
         this.generateSolution();
         this.createPuzzle();
+        this.notes = {}; // 清除所有笔记
+        this.isNoteMode = false; // 重置笔记模式
         this.updateDisplay();
         this.resetTimer();
         this.hintsUsed = 0;
         this.showMessage(`新${this.gridSize}宫格游戏开始！加油！`, 'info');
+        
+        // 重置笔记模式按钮
+        const noteModeBtn = document.getElementById('note-mode-btn');
+        if (noteModeBtn) {
+            noteModeBtn.classList.remove('active');
+            noteModeBtn.textContent = '📝 笔记';
+        }
     }
 
     generateSolution() {
@@ -400,6 +436,7 @@ class SudokuGame {
     }
 
     updateDisplay() {
+        console.log('开始更新显示...');
         for (let row = 0; row < this.gridSize; row++) {
             for (let col = 0; col < this.gridSize; col++) {
                 const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
@@ -407,15 +444,20 @@ class SudokuGame {
                     const value = this.board[row][col];
                     const originalValue = this.originalBoard[row][col];
                     
-                    cell.textContent = value || '';
                     cell.classList.remove('fixed', 'error', 'correct');
                     
                     if (originalValue !== 0) {
                         cell.classList.add('fixed');
                     }
+                    
+                    // 使用新的显示方法
+                    this.updateCellDisplay(row, col);
+                } else {
+                    console.error(`找不到单元格: 第${row+1}行第${col+1}列`);
                 }
             }
         }
+        console.log('显示更新完成');
     }
 
     // 改进3：增加数独规则验证
@@ -471,23 +513,27 @@ class SudokuGame {
     }
 
     isValid(board, row, col, num) {
-        // 检查行
+        // 检查行（排除当前位置）
         for (let x = 0; x < this.gridSize; x++) {
-            if (board[row][x] === num) return false;
+            if (x !== col && board[row][x] === num) return false;
         }
         
-        // 检查列
+        // 检查列（排除当前位置）
         for (let x = 0; x < this.gridSize; x++) {
-            if (board[x][col] === num) return false;
+            if (x !== row && board[x][col] === num) return false;
         }
         
-        // 检查宫格（根据宫格大小调整）
+        // 检查宫格（排除当前位置）
         const boxSize = Math.sqrt(this.gridSize);
         const startRow = Math.floor(row / boxSize) * boxSize;
         const startCol = Math.floor(col / boxSize) * boxSize;
         for (let i = 0; i < boxSize; i++) {
             for (let j = 0; j < boxSize; j++) {
-                if (board[i + startRow][j + startCol] === num) return false;
+                const checkRow = i + startRow;
+                const checkCol = j + startCol;
+                if ((checkRow !== row || checkCol !== col) && board[checkRow][checkCol] === num) {
+                    return false;
+                }
             }
         }
         
@@ -545,6 +591,22 @@ class SudokuGame {
         return true;
     }
 
+    toggleNoteMode() {
+        this.isNoteMode = !this.isNoteMode;
+        const noteModeBtn = document.getElementById('note-mode-btn');
+        if (noteModeBtn) {
+            if (this.isNoteMode) {
+                noteModeBtn.classList.add('active');
+                noteModeBtn.textContent = '📝 笔记模式';
+                this.showMessage('已切换到笔记模式，点击数字添加笔记', 'info');
+            } else {
+                noteModeBtn.classList.remove('active');
+                noteModeBtn.textContent = '📝 笔记';
+                this.showMessage('已切换到正常模式', 'info');
+            }
+        }
+    }
+
     placeNumber(number) {
         if (!this.selectedCell) {
             this.showMessage('请先选择一个单元格！', 'error');
@@ -559,23 +621,136 @@ class SudokuGame {
             return;
         }
 
-        if (number === 0) {
-            // 清除单元格
-            this.board[row][col] = 0;
-            this.selectedCell.textContent = '';
-            this.selectedCell.classList.remove('error', 'correct');
-        } else {
-            // 放置数字
-            this.board[row][col] = number;
-            this.selectedCell.textContent = number;
-            this.selectedCell.classList.remove('error', 'correct');
-            
-            // 实时验证数独规则
-            const validation = this.validateSudokuRules(this.board);
-            if (!validation.valid) {
-                this.selectedCell.classList.add('error');
-                this.showMessage(`数独规则冲突：${validation.type === 'row' ? '行' : validation.type === 'column' ? '列' : '宫格'}中有重复数字！`, 'error');
+        if (this.isNoteMode) {
+            // 笔记模式
+            if (number === 0) {
+                // 清除该单元格的所有笔记
+                this.clearNotes(row, col);
+                this.updateCellDisplay(row, col);
+            } else {
+                // 切换笔记
+                this.toggleNote(row, col, number);
             }
+        } else {
+            // 正常模式
+            if (number === 0) {
+                // 清除单元格
+                this.board[row][col] = 0;
+                this.clearNotes(row, col);
+                this.updateCellDisplay(row, col);
+            } else {
+                // 放置数字
+                this.board[row][col] = number;
+                this.clearNotes(row, col); // 放置数字时清除笔记
+                this.updateCellDisplay(row, col);
+                
+                // 实时验证数独规则
+                const validation = this.validateSudokuRules(this.board);
+                if (!validation.valid) {
+                    this.selectedCell.classList.add('error');
+                    this.showMessage(`数独规则冲突：${validation.type === 'row' ? '行' : validation.type === 'column' ? '列' : '宫格'}中有重复数字！`, 'error');
+                }
+            }
+        }
+    }
+
+    toggleNote(row, col, number) {
+        if (number === 0) return; // 笔记模式下不处理0
+        
+        const noteKey = `${row}-${col}`;
+        if (!this.notes[noteKey]) {
+            this.notes[noteKey] = [];
+        }
+        
+        const noteIndex = this.notes[noteKey].indexOf(number);
+        if (noteIndex > -1) {
+            // 如果笔记已存在，则移除
+            this.notes[noteKey].splice(noteIndex, 1);
+            console.log(`移除笔记: 第${row+1}行第${col+1}列的数字${number}`);
+        } else {
+            // 如果笔记不存在，则添加
+            this.notes[noteKey].push(number);
+            this.notes[noteKey].sort((a, b) => a - b); // 排序
+            console.log(`添加笔记: 第${row+1}行第${col+1}列的数字${number}`);
+        }
+        
+        console.log(`当前笔记: ${JSON.stringify(this.notes[noteKey])}`);
+        this.updateCellDisplay(row, col);
+    }
+
+    clearNotes(row, col) {
+        const noteKey = `${row}-${col}`;
+        if (this.notes[noteKey]) {
+            delete this.notes[noteKey];
+        }
+    }
+
+    updateCellDisplay(row, col) {
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if (!cell) {
+            console.error(`找不到单元格: 第${row+1}行第${col+1}列`);
+            return;
+        }
+        
+        const value = this.board[row][col];
+        const noteKey = `${row}-${col}`;
+        const notes = this.notes[noteKey] || [];
+        
+        console.log(`更新单元格显示: 第${row+1}行第${col+1}列，值: ${value}，笔记: ${JSON.stringify(notes)}`);
+        
+        // 清除之前的显示
+        cell.textContent = '';
+        
+        // 查找或创建笔记容器
+        let notesContainer = cell.querySelector('.notes-container');
+        if (!notesContainer) {
+            console.log(`笔记容器不存在，正在创建...`);
+            notesContainer = document.createElement('div');
+            notesContainer.className = 'notes-container';
+            cell.appendChild(notesContainer);
+            console.log(`已创建笔记容器`);
+        }
+        
+        notesContainer.innerHTML = '';
+        
+        if (value !== 0) {
+            // 显示主数字
+            cell.textContent = value;
+            console.log(`显示主数字: ${value}`);
+        } else if (notes.length > 0) {
+            // 显示笔记
+            console.log(`准备显示笔记: ${JSON.stringify(notes)}`);
+            this.displayNotes(cell, notes);
+        } else {
+            console.log(`单元格为空，无笔记`);
+        }
+        
+        // 更新样式
+        cell.classList.remove('error', 'correct');
+        if (value !== 0) {
+            // 只检查当前格子是否与行、列、宫格中的其他数字冲突
+            if (!this.isValid(this.board, row, col, value)) {
+                cell.classList.add('error');
+            }
+        }
+    }
+
+    displayNotes(cell, notes) {
+        const notesContainer = cell.querySelector('.notes-container');
+        if (!notesContainer) {
+            console.error('找不到笔记容器');
+            return;
+        }
+        
+        notesContainer.innerHTML = '';
+        console.log(`显示笔记: ${JSON.stringify(notes)}`);
+        
+        // 创建笔记网格
+        for (let i = 1; i <= this.gridSize; i++) {
+            const noteElement = document.createElement('span');
+            noteElement.className = 'note-number';
+            noteElement.textContent = notes.includes(i) ? i : '';
+            notesContainer.appendChild(noteElement);
         }
     }
 
