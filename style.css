@@ -54,6 +54,13 @@ h1 {
     color: #ff6b6b;
 }
 
+.game-settings {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.grid-size select,
 .difficulty select {
     padding: 8px 15px;
     border: 2px solid #4ecdc4;
@@ -65,25 +72,34 @@ h1 {
     cursor: pointer;
 }
 
-.game-board {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 30px;
-}
-
+/* 动态调整数独网格大小 */
 #sudoku-grid {
     display: grid;
-    grid-template-columns: repeat(9, 1fr);
     gap: 2px;
     background: #333;
     padding: 8px;
     border-radius: 15px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    margin: 0 auto;
+}
+
+#sudoku-grid.grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+#sudoku-grid.grid-6 {
+    grid-template-columns: repeat(6, 1fr);
+}
+
+#sudoku-grid.grid-9 {
+    grid-template-columns: repeat(9, 1fr);
+}
+
+#sudoku-grid.grid-16 {
+    grid-template-columns: repeat(16, 1fr);
 }
 
 .cell {
-    width: 50px;
-    height: 50px;
     background: white;
     border: none;
     font-size: 1.5em;
@@ -92,6 +108,31 @@ h1 {
     cursor: pointer;
     transition: all 0.3s ease;
     border-radius: 8px;
+}
+
+/* 不同宫格大小的单元格尺寸 */
+.grid-4 .cell {
+    width: 60px;
+    height: 60px;
+    font-size: 2em;
+}
+
+.grid-6 .cell {
+    width: 55px;
+    height: 55px;
+    font-size: 1.8em;
+}
+
+.grid-9 .cell {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5em;
+}
+
+.grid-16 .cell {
+    width: 35px;
+    height: 35px;
+    font-size: 1.2em;
 }
 
 .cell:hover {
@@ -133,17 +174,32 @@ h1 {
     margin-bottom: 4px;
 }
 
-.controls {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
+/* 动态数字按钮布局 */
 .number-pad {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
     gap: 10px;
     margin-bottom: 20px;
+    justify-content: center;
+}
+
+.number-pad.size-4 {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 300px;
+}
+
+.number-pad.size-6 {
+    grid-template-columns: repeat(6, 1fr);
+    max-width: 450px;
+}
+
+.number-pad.size-9 {
+    grid-template-columns: repeat(5, 1fr);
+    max-width: 500px;
+}
+
+.number-pad.size-16 {
+    grid-template-columns: repeat(8, 1fr);
+    max-width: 600px;
 }
 
 .number-btn {
@@ -168,9 +224,14 @@ h1 {
     transform: translateY(0);
 }
 
+/* 16宫格的数字按钮特殊样式 */
+.size-16 .number-btn {
+    padding: 12px;
+    font-size: 1.1em;
+}
+
 .clear-btn {
     background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-    grid-column: span 2;
 }
 
 .action-buttons {
@@ -272,22 +333,57 @@ h1 {
         font-size: 2em;
     }
     
-    .cell {
+    .game-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .game-settings {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .grid-4 .cell {
+        width: 50px;
+        height: 50px;
+        font-size: 1.6em;
+    }
+    
+    .grid-6 .cell {
+        width: 45px;
+        height: 45px;
+        font-size: 1.4em;
+    }
+    
+    .grid-9 .cell {
         width: 40px;
         height: 40px;
         font-size: 1.2em;
     }
     
-    .number-pad {
+    .grid-16 .cell {
+        width: 30px;
+        height: 30px;
+        font-size: 1em;
+    }
+    
+    .number-pad.size-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .number-pad.size-6 {
         grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .number-pad.size-9 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .number-pad.size-16 {
+        grid-template-columns: repeat(4, 1fr);
     }
     
     .action-buttons {
         grid-template-columns: 1fr;
-    }
-    
-    .game-info {
-        flex-direction: column;
-        gap: 10px;
     }
 } 

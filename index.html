@@ -18,13 +18,24 @@
                 <span>⏰ 时间：</span>
                 <span id="time">00:00</span>
             </div>
-            <div class="difficulty">
-                <span>🎯 难度：</span>
-                <select id="difficulty-select">
-                    <option value="easy">简单</option>
-                    <option value="medium">中等</option>
-                    <option value="hard">困难</option>
-                </select>
+            <div class="game-settings">
+                <div class="grid-size">
+                    <span>🎯 宫格：</span>
+                    <select id="grid-size-select">
+                        <option value="4">4宫格</option>
+                        <option value="6">6宫格</option>
+                        <option value="9" selected>9宫格</option>
+                        <option value="16">16宫格</option>
+                    </select>
+                </div>
+                <div class="difficulty">
+                    <span>🎯 难度：</span>
+                    <select id="difficulty-select">
+                        <option value="easy">简单</option>
+                        <option value="medium">中等</option>
+                        <option value="hard">困难</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -33,17 +44,8 @@
         </div>
 
         <div class="controls">
-            <div class="number-pad">
-                <button class="number-btn" data-number="1">1</button>
-                <button class="number-btn" data-number="2">2</button>
-                <button class="number-btn" data-number="3">3</button>
-                <button class="number-btn" data-number="4">4</button>
-                <button class="number-btn" data-number="5">5</button>
-                <button class="number-btn" data-number="6">6</button>
-                <button class="number-btn" data-number="7">7</button>
-                <button class="number-btn" data-number="8">8</button>
-                <button class="number-btn" data-number="9">9</button>
-                <button class="number-btn clear-btn" data-number="0">🗑️ 清除</button>
+            <div class="number-pad" id="number-pad">
+                <!-- 数字按钮将根据宫格大小动态生成 -->
             </div>
             
             <div class="action-buttons">

@@ -1,8 +1,9 @@
 class SudokuGame {
     constructor() {
-        this.board = Array(9).fill().map(() => Array(9).fill(0));
-        this.solution = Array(9).fill().map(() => Array(9).fill(0));
-        this.originalBoard = Array(9).fill().map(() => Array(9).fill(0));
+        this.gridSize = 9; // 默认9宫格
+        this.board = [];
+        this.solution = [];
+        this.originalBoard = [];
         this.selectedCell = null;
         this.timer = 0;
         this.timerInterval = null;
@@ -16,15 +17,17 @@ class SudokuGame {
 
     initializeGame() {
         this.createSudokuGrid();
+        this.createNumberPad();
         this.generateNewGame();
     }
 
     createSudokuGrid() {
         const grid = document.getElementById('sudoku-grid');
         grid.innerHTML = '';
+        grid.className = `grid-${this.gridSize}`;
 
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
                 const cell = document.createElement('button');
                 cell.className = 'cell';
                 cell.dataset.row = row;
@@ -33,6 +36,30 @@ class SudokuGame {
                 grid.appendChild(cell);
             }
         }
+    }
+
+    createNumberPad() {
+        const numberPad = document.getElementById('number-pad');
+        numberPad.innerHTML = '';
+        numberPad.className = `number-pad size-${this.gridSize}`;
+
+        // 根据宫格大小生成数字按钮
+        for (let i = 1; i <= this.gridSize; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'number-btn';
+            btn.dataset.number = i;
+            btn.textContent = i;
+            btn.addEventListener('click', () => this.placeNumber(i));
+            numberPad.appendChild(btn);
+        }
+
+        // 添加清除按钮
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'number-btn clear-btn';
+        clearBtn.dataset.number = 0;
+        clearBtn.textContent = '🗑️ 清除';
+        clearBtn.addEventListener('click', () => this.placeNumber(0));
+        numberPad.appendChild(clearBtn);
     }
 
     selectCell(row, col) {
@@ -63,39 +90,87 @@ class SudokuGame {
         this.updateDisplay();
         this.resetTimer();
         this.hintsUsed = 0;
-        this.showMessage('新游戏开始！加油！', 'info');
+        this.showMessage(`新${this.gridSize}宫格游戏开始！加油！`, 'info');
     }
 
     generateSolution() {
-        // 使用预定义的数独模板，然后随机变换
-        const templates = [
-            [
-                [5,3,4,6,7,8,9,1,2],
-                [6,7,2,1,9,5,3,4,8],
-                [1,9,8,3,4,2,5,6,7],
-                [8,5,9,7,6,1,4,2,3],
-                [4,2,6,8,5,3,7,9,1],
-                [7,1,3,9,2,4,8,5,6],
-                [9,6,1,5,3,7,2,8,4],
-                [2,8,7,4,1,9,6,3,5],
-                [3,4,5,2,8,6,1,7,9]
-            ]
-        ];
-        
-        // 随机选择一个模板
+        // 根据宫格大小生成不同的数独模板
+        const templates = this.getTemplates();
         const template = templates[Math.floor(Math.random() * templates.length)];
         this.solution = template.map(row => [...row]);
         
-        // 随机变换（交换行、列、数字）
+        // 随机变换（交换数字）
         this.randomizeSolution();
+    }
+
+    getTemplates() {
+        switch (this.gridSize) {
+            case 4:
+                return [
+                    [
+                        [1,2,3,4],
+                        [3,4,1,2],
+                        [2,1,4,3],
+                        [4,3,2,1]
+                    ]
+                ];
+            case 6:
+                return [
+                    [
+                        [1,2,3,4,5,6],
+                        [4,5,6,1,2,3],
+                        [2,3,1,5,6,4],
+                        [5,6,4,2,3,1],
+                        [3,1,2,6,4,5],
+                        [6,4,5,3,1,2]
+                    ]
+                ];
+            case 9:
+                return [
+                    [
+                        [5,3,4,6,7,8,9,1,2],
+                        [6,7,2,1,9,5,3,4,8],
+                        [1,9,8,3,4,2,5,6,7],
+                        [8,5,9,7,6,1,4,2,3],
+                        [4,2,6,8,5,3,7,9,1],
+                        [7,1,3,9,2,4,8,5,6],
+                        [9,6,1,5,3,7,2,8,4],
+                        [2,8,7,4,1,9,6,3,5],
+                        [3,4,5,2,8,6,1,7,9]
+                    ]
+                ];
+            case 16:
+                return [
+                    [
+                        [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+                        [5,6,7,8,9,10,11,12,13,14,15,16,1,2,3,4],
+                        [9,10,11,12,13,14,15,16,1,2,3,4,5,6,7,8],
+                        [13,14,15,16,1,2,3,4,5,6,7,8,9,10,11,12],
+                        [2,1,4,3,6,5,8,7,10,9,12,11,14,13,16,15],
+                        [6,5,8,7,10,9,12,11,14,13,16,15,2,1,4,3],
+                        [10,9,12,11,14,13,16,15,2,1,4,3,6,5,8,7],
+                        [14,13,16,15,2,1,4,3,6,5,8,7,10,9,12,11],
+                        [3,4,1,2,7,8,5,6,11,12,9,10,15,16,13,14],
+                        [7,8,5,6,11,12,9,10,15,16,13,14,3,4,1,2],
+                        [11,12,9,10,15,16,13,14,3,4,1,2,7,8,5,6],
+                        [15,16,13,14,3,4,1,2,7,8,5,6,11,12,9,10],
+                        [4,3,2,1,8,7,6,5,12,11,10,9,16,15,14,13],
+                        [8,7,6,5,12,11,10,9,16,15,14,13,4,3,2,1],
+                        [12,11,10,9,16,15,14,13,4,3,2,1,8,7,6,5],
+                        [16,15,14,13,4,3,2,1,8,7,6,5,12,11,10,9]
+                    ]
+                ];
+            default:
+                return [];
+        }
     }
 
     randomizeSolution() {
         // 随机交换数字
         const swaps = Math.floor(Math.random() * 5) + 3;
         for (let i = 0; i < swaps; i++) {
-            const num1 = Math.floor(Math.random() * 9) + 1;
-            const num2 = Math.floor(Math.random() * 9) + 1;
+            const num1 = Math.floor(Math.random() * this.gridSize) + 1;
+            const num2 = Math.floor(Math.random() * this.gridSize) + 1;
             if (num1 !== num2) {
                 this.swapNumbers(num1, num2);
             }
@@ -103,8 +178,8 @@ class SudokuGame {
     }
 
     swapNumbers(num1, num2) {
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
                 if (this.solution[row][col] === num1) {
                     this.solution[row][col] = num2;
                 } else if (this.solution[row][col] === num2) {
@@ -121,31 +196,33 @@ class SudokuGame {
         const difficulty = document.getElementById('difficulty-select').value;
         let cellsToRemove;
         
+        // 根据宫格大小和难度调整移除的单元格数量
+        const totalCells = this.gridSize * this.gridSize;
         switch (difficulty) {
             case 'easy':
-                cellsToRemove = 40; // 保留41个数字
+                cellsToRemove = Math.floor(totalCells * 0.5); // 保留50%的数字
                 break;
             case 'medium':
-                cellsToRemove = 50; // 保留31个数字
+                cellsToRemove = Math.floor(totalCells * 0.6); // 保留40%的数字
                 break;
             case 'hard':
-                cellsToRemove = 60; // 保留21个数字
+                cellsToRemove = Math.floor(totalCells * 0.7); // 保留30%的数字
                 break;
             default:
-                cellsToRemove = 40;
+                cellsToRemove = Math.floor(totalCells * 0.5);
         }
         
         // 随机移除单元格
         const positions = [];
-        for (let i = 0; i < 81; i++) {
+        for (let i = 0; i < totalCells; i++) {
             positions.push(i);
         }
         
         for (let i = 0; i < cellsToRemove; i++) {
             const randomIndex = Math.floor(Math.random() * positions.length);
             const pos = positions[randomIndex];
-            const row = Math.floor(pos / 9);
-            const col = pos % 9;
+            const row = Math.floor(pos / this.gridSize);
+            const col = pos % this.gridSize;
             
             this.board[row][col] = 0;
             positions.splice(randomIndex, 1);
@@ -156,8 +233,8 @@ class SudokuGame {
     }
 
     updateDisplay() {
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
                 const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
                 if (cell) {
                     const value = this.board[row][col];
@@ -176,20 +253,21 @@ class SudokuGame {
 
     isValid(board, row, col, num) {
         // 检查行
-        for (let x = 0; x < 9; x++) {
+        for (let x = 0; x < this.gridSize; x++) {
             if (board[row][x] === num) return false;
         }
         
         // 检查列
-        for (let x = 0; x < 9; x++) {
+        for (let x = 0; x < this.gridSize; x++) {
             if (board[x][col] === num) return false;
         }
         
-        // 检查3x3宫格
-        const startRow = Math.floor(row / 3) * 3;
-        const startCol = Math.floor(col / 3) * 3;
-        for (let i = 0; i < 3; i++) {
-            for (let j = 0; j < 3; j++) {
+        // 检查宫格（根据宫格大小调整）
+        const boxSize = Math.sqrt(this.gridSize);
+        const startRow = Math.floor(row / boxSize) * boxSize;
+        const startCol = Math.floor(col / boxSize) * boxSize;
+        for (let i = 0; i < boxSize; i++) {
+            for (let j = 0; j < boxSize; j++) {
                 if (board[i + startRow][j + startCol] === num) return false;
             }
         }
@@ -226,8 +304,8 @@ class SudokuGame {
 
     checkSolution() {
         // 检查是否所有单元格都已填写
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
                 if (this.board[row][col] === 0) {
                     this.showMessage('请先完成所有单元格！', 'error');
                     return;
@@ -236,8 +314,8 @@ class SudokuGame {
         }
 
         // 检查解答是否正确
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
                 if (this.board[row][col] !== this.solution[row][col]) {
                     this.showMessage('解答不正确，请继续尝试！', 'error');
                     return;
@@ -245,7 +323,7 @@ class SudokuGame {
             }
         }
 
-        this.showMessage('🎉 恭喜！数独完成！', 'success');
+        this.showMessage(`🎉 恭喜！${this.gridSize}宫格数独完成！`, 'success');
         this.stopTimer();
     }
 
@@ -256,8 +334,8 @@ class SudokuGame {
         }
 
         // 找到第一个空的单元格
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
                 if (this.board[row][col] === 0) {
                     const correctNumber = this.solution[row][col];
                     this.board[row][col] = correctNumber;
@@ -279,7 +357,7 @@ class SudokuGame {
     solvePuzzle() {
         this.board = this.solution.map(row => [...row]);
         this.updateDisplay();
-        this.showMessage('数独已自动解答完成！', 'success');
+        this.showMessage(`${this.gridSize}宫格数独已自动解答完成！`, 'success');
         this.stopTimer();
     }
 
@@ -328,18 +406,11 @@ class SudokuGame {
     }
 
     setupEventListeners() {
-        // 数字按钮事件
-        document.querySelectorAll('.number-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const number = parseInt(btn.dataset.number);
-                this.placeNumber(number);
-            });
-        });
-
         // 键盘事件
         document.addEventListener('keydown', (e) => {
-            if (e.key >= '1' && e.key <= '9') {
-                this.placeNumber(parseInt(e.key));
+            const num = parseInt(e.key);
+            if (num >= 1 && num <= this.gridSize) {
+                this.placeNumber(num);
             } else if (e.key === 'Backspace' || e.key === 'Delete') {
                 this.placeNumber(0);
             }
@@ -371,6 +442,15 @@ class SudokuGame {
         if (solveBtn) {
             solveBtn.addEventListener('click', () => {
                 this.solvePuzzle();
+            });
+        }
+
+        // 宫格大小选择事件
+        const gridSizeSelect = document.getElementById('grid-size-select');
+        if (gridSizeSelect) {
+            gridSizeSelect.addEventListener('change', () => {
+                this.gridSize = parseInt(gridSizeSelect.value);
+                this.initializeGame();
             });
         }
 
