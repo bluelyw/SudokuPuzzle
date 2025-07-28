@@ -108,7 +108,7 @@ class SudokuGame {
             const templates = this.getTemplates();
             const template = templates[Math.floor(Math.random() * templates.length)];
             this.solution = template.map(row => [...row]);
-            this.randomizeSolution();
+            // 移除随机化，直接使用验证过的模板
         }
         
         // 验证生成的解答是否正确
@@ -116,6 +116,14 @@ class SudokuGame {
         if (!validation.valid) {
             console.error('生成的数独解答有错误，重新生成...');
             this.generateSolution(); // 递归重新生成
+            return; // 防止无限递归
+        }
+        
+        // 额外验证：确保每个数字在每行、每列、每个宫格中只出现一次
+        if (!this.isValidSudoku(this.solution)) {
+            console.error('数独解答验证失败，重新生成...');
+            this.generateSolution();
+            return;
         }
     }
 
@@ -480,6 +488,57 @@ class SudokuGame {
         for (let i = 0; i < boxSize; i++) {
             for (let j = 0; j < boxSize; j++) {
                 if (board[i + startRow][j + startCol] === num) return false;
+            }
+        }
+        
+        return true;
+    }
+
+    isValidSudoku(board) {
+        // 检查行
+        for (let row = 0; row < this.gridSize; row++) {
+            const rowSet = new Set();
+            for (let col = 0; col < this.gridSize; col++) {
+                const num = board[row][col];
+                if (num === 0) continue;
+                if (rowSet.has(num)) {
+                    console.error(`第${row + 1}行有重复数字: ${num}`);
+                    return false;
+                }
+                rowSet.add(num);
+            }
+        }
+        
+        // 检查列
+        for (let col = 0; col < this.gridSize; col++) {
+            const colSet = new Set();
+            for (let row = 0; row < this.gridSize; row++) {
+                const num = board[row][col];
+                if (num === 0) continue;
+                if (colSet.has(num)) {
+                    console.error(`第${col + 1}列有重复数字: ${num}`);
+                    return false;
+                }
+                colSet.add(num);
+            }
+        }
+        
+        // 检查宫格
+        const boxSize = Math.sqrt(this.gridSize);
+        for (let boxRow = 0; boxRow < this.gridSize; boxRow += boxSize) {
+            for (let boxCol = 0; boxCol < this.gridSize; boxCol += boxSize) {
+                const boxSet = new Set();
+                for (let i = 0; i < boxSize; i++) {
+                    for (let j = 0; j < boxSize; j++) {
+                        const num = board[boxRow + i][boxCol + j];
+                        if (num === 0) continue;
+                        if (boxSet.has(num)) {
+                            console.error(`宫格(${Math.floor(boxRow/boxSize) + 1},${Math.floor(boxCol/boxSize) + 1})有重复数字: ${num}`);
+                            return false;
+                        }
+                        boxSet.add(num);
+                    }
+                }
             }
         }
         
