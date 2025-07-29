@@ -115,44 +115,83 @@ class SudokuGame {
     }
 
     generateNewGame() {
-        this.generateSolution();
-        this.createPuzzle();
-        this.notes = {}; // 清除所有笔记
-        this.isNoteMode = false; // 重置笔记模式
-        this.updateDisplay();
-        this.resetTimer();
-        this.hintsUsed = 0;
-        this.showMessage(`新${this.gridSize}宫格游戏开始！加油！`, 'info');
+        console.log('开始生成新游戏，宫格大小:', this.gridSize);
         
-        // 重置笔记模式按钮
-        const noteModeBtn = document.getElementById('note-mode-btn');
-        if (noteModeBtn) {
-            noteModeBtn.classList.remove('active');
-            noteModeBtn.textContent = '📝 笔记';
-        }
+        // 增加重试机制
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        const tryGenerateGame = () => {
+            try {
+                this.generateSolution();
+                this.createPuzzle();
+                this.notes = {}; // 清除所有笔记
+                this.isNoteMode = false; // 重置笔记模式
+                this.updateDisplay();
+                this.resetTimer();
+                this.hintsUsed = 0;
+                this.showMessage(`新${this.gridSize}宫格游戏开始！加油！`, 'info');
+                
+                // 重置笔记模式按钮
+                const noteModeBtn = document.getElementById('note-mode-btn');
+                if (noteModeBtn) {
+                    noteModeBtn.classList.remove('active');
+                    noteModeBtn.textContent = '📝 笔记';
+                }
+                
+                console.log('新游戏生成成功');
+            } catch (error) {
+                console.error('生成游戏失败:', error);
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    console.log(`重试第${retryCount}次...`);
+                    setTimeout(tryGenerateGame, 100);
+                } else {
+                    console.error('游戏生成失败，已达到最大重试次数');
+                    this.showMessage('游戏生成失败，请刷新页面重试', 'error');
+                }
+            }
+        };
+        
+        tryGenerateGame();
     }
 
     generateSolution() {
-        // 随机选择生成方式：模板生成或随机生成
-        const useRandomGeneration = Math.random() < 0.3; // 30%概率使用随机生成
+        console.log('开始生成解答，宫格大小:', this.gridSize);
         
-        if (useRandomGeneration && this.gridSize <= 9) {
+        // 随机选择生成方式：模板生成或随机生成
+        const useRandomGeneration = Math.random() < 0.3 && this.gridSize <= 9; // 只对9宫格及以下使用随机生成
+        
+        if (useRandomGeneration) {
             // 使用真正的随机生成算法
+            console.log('使用随机生成算法');
             this.solution = this.generateRandomSudoku();
         } else {
             // 使用模板生成
+            console.log('使用模板生成算法');
             const templates = this.getTemplates();
-            const template = templates[Math.floor(Math.random() * templates.length)];
-            this.solution = template.map(row => [...row]);
-            // 移除随机化，直接使用验证过的模板
+            if (templates.length === 0) {
+                console.error('没有找到合适的模板，使用随机生成');
+                this.solution = this.generateRandomSudoku();
+            } else {
+                const template = templates[Math.floor(Math.random() * templates.length)];
+                this.solution = template.map(row => [...row]);
+                
+                // 专门为6宫格添加调试信息
+                if (this.gridSize === 6) {
+                    console.log('6宫格模板选择:', template);
+                    console.log('6宫格解答:', this.solution);
+                }
+            }
         }
         
         // 验证生成的解答是否正确
         const validation = this.validateSudokuRules(this.solution);
         if (!validation.valid) {
             console.error('生成的数独解答有错误，重新生成...');
+            console.error('验证失败详情:', validation);
             this.generateSolution(); // 递归重新生成
-            return; // 防止无限递归
+            return;
         }
         
         // 额外验证：确保每个数字在每行、每列、每个宫格中只出现一次
@@ -161,6 +200,8 @@ class SudokuGame {
             this.generateSolution();
             return;
         }
+        
+        console.log('解答生成成功');
     }
 
     // 改进1：增加更多模板
@@ -307,29 +348,58 @@ class SudokuGame {
 
     // 改进2：实现真正的随机生成算法
     generateRandomSudoku() {
+        console.log('开始随机生成数独，宫格大小:', this.gridSize);
+        
         const board = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(0));
         
+        // 对于16宫格，使用更简单的生成策略
+        if (this.gridSize === 16) {
+            // 16宫格使用模板生成，因为随机生成太复杂
+            const templates = this.getTemplates();
+            if (templates.length > 0) {
+                const template = templates[Math.floor(Math.random() * templates.length)];
+                return template.map(row => [...row]);
+            }
+        }
+        
+        // 填充对角线上的宫格 - 修复6宫格的特殊情况
+        let boxRows, boxCols;
+        if (this.gridSize === 6) {
+            // 6宫格是2×3的宫格
+            boxRows = 2;
+            boxCols = 3;
+        } else {
+            // 其他宫格是正方形
+            const boxSize = Math.sqrt(this.gridSize);
+            boxRows = boxSize;
+            boxCols = boxSize;
+        }
+        
         // 填充对角线上的宫格
-        const boxSize = Math.sqrt(this.gridSize);
-        for (let i = 0; i < this.gridSize; i += boxSize + 1) {
-            this.fillBox(board, i, i);
+        for (let i = 0; i < this.gridSize; i += boxRows) {
+            for (let j = 0; j < this.gridSize; j += boxCols) {
+                if (i === j) { // 只填充对角线上的宫格
+                    this.fillBox(board, i, j, boxRows, boxCols);
+                }
+            }
         }
         
         // 使用回溯算法解决剩余的单元格
         if (this.solveSudoku(board)) {
+            console.log('随机生成成功');
             return board;
         } else {
             // 如果失败，重新生成
+            console.log('随机生成失败，重新尝试');
             return this.generateRandomSudoku();
         }
     }
 
-    fillBox(board, row, col) {
-        const boxSize = Math.sqrt(this.gridSize);
+    fillBox(board, row, col, boxRows, boxCols) {
         const numbers = Array.from({length: this.gridSize}, (_, i) => i + 1);
         
-        for (let i = 0; i < boxSize; i++) {
-            for (let j = 0; j < boxSize; j++) {
+        for (let i = 0; i < boxRows; i++) {
+            for (let j = 0; j < boxCols; j++) {
                 const randomIndex = Math.floor(Math.random() * numbers.length);
                 board[row + i][col + j] = numbers[randomIndex];
                 numbers.splice(randomIndex, 1);
@@ -490,13 +560,24 @@ class SudokuGame {
             }
         }
         
-        // 检查宫格
-        const boxSize = Math.sqrt(this.gridSize);
-        for (let boxRow = 0; boxRow < this.gridSize; boxRow += boxSize) {
-            for (let boxCol = 0; boxCol < this.gridSize; boxCol += boxSize) {
+        // 检查宫格 - 修复6宫格的特殊情况
+        let boxRows, boxCols;
+        if (this.gridSize === 6) {
+            // 6宫格是2×3的宫格
+            boxRows = 2;
+            boxCols = 3;
+        } else {
+            // 其他宫格是正方形
+            const boxSize = Math.sqrt(this.gridSize);
+            boxRows = boxSize;
+            boxCols = boxSize;
+        }
+        
+        for (let boxRow = 0; boxRow < this.gridSize; boxRow += boxRows) {
+            for (let boxCol = 0; boxCol < this.gridSize; boxCol += boxCols) {
                 const boxNumbers = new Set();
-                for (let i = 0; i < boxSize; i++) {
-                    for (let j = 0; j < boxSize; j++) {
+                for (let i = 0; i < boxRows; i++) {
+                    for (let j = 0; j < boxCols; j++) {
                         const num = board[boxRow + i][boxCol + j];
                         if (num !== 0) {
                             if (boxNumbers.has(num)) {
@@ -523,12 +604,23 @@ class SudokuGame {
             if (x !== row && board[x][col] === num) return false;
         }
         
-        // 检查宫格（排除当前位置）
-        const boxSize = Math.sqrt(this.gridSize);
-        const startRow = Math.floor(row / boxSize) * boxSize;
-        const startCol = Math.floor(col / boxSize) * boxSize;
-        for (let i = 0; i < boxSize; i++) {
-            for (let j = 0; j < boxSize; j++) {
+        // 检查宫格（排除当前位置）- 修复6宫格的特殊情况
+        let boxRows, boxCols;
+        if (this.gridSize === 6) {
+            // 6宫格是2×3的宫格
+            boxRows = 2;
+            boxCols = 3;
+        } else {
+            // 其他宫格是正方形
+            const boxSize = Math.sqrt(this.gridSize);
+            boxRows = boxSize;
+            boxCols = boxSize;
+        }
+        
+        const startRow = Math.floor(row / boxRows) * boxRows;
+        const startCol = Math.floor(col / boxCols) * boxCols;
+        for (let i = 0; i < boxRows; i++) {
+            for (let j = 0; j < boxCols; j++) {
                 const checkRow = i + startRow;
                 const checkCol = j + startCol;
                 if ((checkRow !== row || checkCol !== col) && board[checkRow][checkCol] === num) {
@@ -569,17 +661,28 @@ class SudokuGame {
             }
         }
         
-        // 检查宫格
-        const boxSize = Math.sqrt(this.gridSize);
-        for (let boxRow = 0; boxRow < this.gridSize; boxRow += boxSize) {
-            for (let boxCol = 0; boxCol < this.gridSize; boxCol += boxSize) {
+        // 检查宫格 - 修复6宫格的特殊情况
+        let boxRows, boxCols;
+        if (this.gridSize === 6) {
+            // 6宫格是2×3的宫格
+            boxRows = 2;
+            boxCols = 3;
+        } else {
+            // 其他宫格是正方形
+            const boxSize = Math.sqrt(this.gridSize);
+            boxRows = boxSize;
+            boxCols = boxSize;
+        }
+        
+        for (let boxRow = 0; boxRow < this.gridSize; boxRow += boxRows) {
+            for (let boxCol = 0; boxCol < this.gridSize; boxCol += boxCols) {
                 const boxSet = new Set();
-                for (let i = 0; i < boxSize; i++) {
-                    for (let j = 0; j < boxSize; j++) {
+                for (let i = 0; i < boxRows; i++) {
+                    for (let j = 0; j < boxCols; j++) {
                         const num = board[boxRow + i][boxCol + j];
                         if (num === 0) continue;
                         if (boxSet.has(num)) {
-                            console.error(`宫格(${Math.floor(boxRow/boxSize) + 1},${Math.floor(boxCol/boxSize) + 1})有重复数字: ${num}`);
+                            console.error(`宫格(${Math.floor(boxRow/boxRows) + 1},${Math.floor(boxCol/boxCols) + 1})有重复数字: ${num}`);
                             return false;
                         }
                         boxSet.add(num);
@@ -905,6 +1008,7 @@ class SudokuGame {
         const newGameBtn = document.getElementById('new-game-btn');
         if (newGameBtn) {
             newGameBtn.addEventListener('click', () => {
+                console.log('点击新游戏按钮');
                 this.generateNewGame();
             });
         }
@@ -930,12 +1034,18 @@ class SudokuGame {
             });
         }
 
-        // 宫格大小选择事件
+        // 宫格大小选择事件 - 修复版本
         const gridSizeSelect = document.getElementById('grid-size-select');
         if (gridSizeSelect) {
             gridSizeSelect.addEventListener('change', () => {
+                console.log('宫格大小改变为:', gridSizeSelect.value);
                 this.gridSize = parseInt(gridSizeSelect.value);
+                // 重新初始化游戏，确保生成新游戏
                 this.initializeGame();
+                // 强制生成新游戏
+                setTimeout(() => {
+                    this.generateNewGame();
+                }, 100);
             });
         }
 
@@ -943,6 +1053,7 @@ class SudokuGame {
         const difficultySelect = document.getElementById('difficulty-select');
         if (difficultySelect) {
             difficultySelect.addEventListener('change', () => {
+                console.log('难度改变为:', difficultySelect.value);
                 this.generateNewGame();
             });
         }
